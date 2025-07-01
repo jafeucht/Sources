@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net8.0;net48</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
+    <RootNamespace>Dataescher.Controls</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.2">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Dataescher\Controls\Dataescher.csproj" />
+    <ProjectReference Include="..\..\Dataescher\Data\Dataescher.Data.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Controls\CircleControl.axaml.cs">
+      <DependentUpon>CircleControl.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>

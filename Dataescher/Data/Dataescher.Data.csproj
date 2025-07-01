@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net8.0;net48</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Collections\Dataescher.Collections.csproj" />
+    <ProjectReference Include="..\Types\Dataescher.Types.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Integrity\CRC_Engine.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>CRC_Engine.cs</LastGenOutput>
+    </None>
+    <None Update="Types\Parsers\IntegerParser.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>IntegerParser.cs</LastGenOutput>
+    </None>
+    <None Update="Types\ArrayConverter.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ArrayConverter.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Integrity\CRC_Engine.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CRC_Engine.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Types\Parsers\IntegerParser.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>IntegerParser.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Types\ArrayConverter.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ArrayConverter.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+</Project>

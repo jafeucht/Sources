@@ -1,0 +1,334 @@
+﻿<#@ template language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#
+Int32[] dataSizes = new Int32[] { 1, 2, 4, 8 };
+#>
+// <copyright file="CRC_Engine.cs" company="Dataescher">
+// Copyright (c) 2022-2024 Dataescher. All rights reserved.
+// </copyright>
+// <author>Jonathan Feucht</author>
+// <date>9/28/2024</date>
+// <summary>Implements CRC engines for various data widths.</summary>
+
+using System;
+using System.IO;
+
+#nullable enable
+
+namespace Dataescher.Data.Integrity {
+<#
+foreach (Int32 dataBytes in dataSizes) {
+	Int32 dataBits = dataBytes * 8;
+	String typeName;
+	if (dataBytes == 1) {
+		typeName = "Byte";
+	} else {
+		typeName = $"UInt{dataBits}";
+	}
+	String className = $"CRC{dataBits}";
+	UInt64 msBit = (UInt64)(1UL << (dataBits - 1));
+	UInt64 msByte = (UInt64)(0xFFUL << (dataBits - 8));
+#>
+	/// <summary>An <#= dataBits #>-bit CRC engine.</summary>
+	public class <#= className #> : CRC {
+		/// <summary>The CRC table.</summary>
+		private <#= typeName #>[]? CRC_Table { get; set; }
+		/// <summary>(Immutable) The polynomial (reflected if required).</summary>
+		private readonly <#= typeName #> _poly;
+		/// <summary>The polynomial.</summary>
+		public <#= typeName #> Polynomial { get; private set; }
+		/// <summary>(Immutable) The initial CRC value (reflected if required).</summary>
+		private readonly <#= typeName #> _init;
+		/// <summary>The initial CRC value.</summary>
+		public <#= typeName #> InitialValue { get; private set; }
+		/// <summary>The final XOR value.</summary>
+		public <#= typeName #> XorOut { get; private set; }
+		/// <summary>If reflected, CRC is lsb first; otherwise, msb first.</summary>
+		public Boolean Reflected { get; private set; }
+		/// <summary>The number of bits.</summary>
+		public static Int32 DataBits => <#= dataBits #>;
+		/// <summary>The number of bytes.</summary>
+		public static Int32 DataBytes => <#= dataBytes #>;
+		/// <summary>Initializes a new instance of the <see cref="<#= className #>"/> class.</summary>
+		/// <param name="polynomial">The polynomial.</param>
+		/// <param name="initialValue">The initial value.</param>
+		/// <param name="reflected">True if reflected.</param>
+		/// <param name="xorOut">The exclusive-or out.</param>
+		public <#= className #>(<#= typeName #> polynomial, <#= typeName #> initialValue, Boolean reflected, <#= typeName #> xorOut) {
+			Reflected = reflected;
+			Polynomial = polynomial;
+			_poly = Reflected ? Reflect(polynomial) : polynomial;
+			InitialValue = initialValue;
+			_init = Reflected ? Reflect(initialValue) : initialValue;
+			XorOut = xorOut;
+			CRC_Table = null;
+		}
+		/// <summary>Reverse the order of the bits in a <#= typeName #> value.</summary>
+		/// <param name="value">The value for which to reverse the order of the bits.</param>
+		/// <returns>The <#= typeName #> value with the bit order reversed.</returns>
+		private static <#= typeName #> Reflect(<#= typeName #> value) {
+			<#= typeName #> b1 = <#= $"0x{msBit:X}" #>;
+			<#= typeName #> b2 = 1;
+			<#= typeName #> result = 0;
+			for (Int32 bitIdx = 0; bitIdx < <#= dataBits #>; bitIdx++) {
+				if ((value & b1) != 0) {
+					result |= b2;
+				}
+				b1 >>= 1;
+				b2 <<= 1;
+			}
+			return result;
+		}
+		/// <summary>Compute the CRC for an array of bytes.</summary>
+		/// <param name="data">The array of bytes.</param>
+		/// <returns>The CRC for the array of bytes.</returns>
+		public <#= typeName #> Compute(Byte[] data) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+			return Compute(new Memory(data), _init ^ XorOut);
+<# } else { #>
+			return Compute(new Memory(data), (<#= typeName #>)(_init ^ XorOut));
+<# } #>
+		}
+		/// <summary>Compute the CRC for an array of bytes.</summary>
+		/// <param name="data">The array of bytes.</param>
+		/// <returns>The CRC for the array of bytes.</returns>
+		public <#= typeName #> Compute(Memory data) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+			return Compute(data, _init ^ XorOut);
+<# } else { #>
+			return Compute(data, (<#= typeName #>)(_init ^ XorOut));
+<# } #>
+		}
+		/// <summary>Compute the CRC for an array of bytes.</summary>
+		/// <param name="data">The array of bytes.</param>
+		/// <param name="initCRC">The initial CRC.</param>
+		/// <returns>The CRC for the array of bytes.</returns>
+		public <#= typeName #> Compute(Byte[] data, <#= typeName #> initCRC) {
+			return Compute(new Memory(data), initCRC);
+		}
+
+		/// <summary>Calculates the CRC for a file.</summary>
+		/// <exception cref="Exception">Thrown when an exception error condition occurs.</exception>
+		/// <param name="filePath">Path of the file.</param>
+		/// <returns>The calculated CCITT CRC.</returns>
+		public <#= typeName #> ComputeForFile(String filePath) {
+			filePath = Path.GetFullPath(filePath);
+			if (!File.Exists(filePath)) {
+				throw new Exception($"File \"{filePath}\" does not exist.");
+			}
+			Int64 fileSize = new FileInfo(filePath).Length;
+			using (FileStream fs = new(filePath, FileMode.Open, FileAccess.Read)) {
+				using (BinaryReader br = new(fs)) {
+					// Compute the CRC for the file
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+					return Compute(br.ReadBytes((Int32)fileSize), _init ^ XorOut);
+<# } else { #>
+					return Compute(br.ReadBytes((Int32)fileSize), (<#= typeName #>)(_init ^ XorOut));
+<# } #>
+				}
+			}
+		}
+
+		/// <summary>Compute the CRC for an array of bytes.</summary>
+		/// <param name="data">The data.</param>
+		/// <param name="initCRC">The initial CRC.</param>
+		/// <param name="offset">The offset into the data.</param>
+		/// <param name="cnt">Number of bytes to compute CRC for.</param>
+		/// <returns>The CRC for the memory.</returns>
+		public <#= typeName #> Compute(Byte[] data, <#= typeName #> initCRC, Int32 offset, Int32 cnt) {
+			UInt32 startIdx;
+			UInt32 endIdx;
+			if (offset >= 0) {
+				startIdx = (UInt32)offset;
+				if (startIdx >= data.Length) {
+					throw new ArgumentOutOfRangeException(nameof(offset), "Read past end of the array.");
+				}
+			} else {
+				startIdx = 0;
+			}
+			if (cnt >= 0) {
+				endIdx = (UInt32)(startIdx + cnt - 1);
+				if (endIdx >= data.Length) {
+					throw new ArgumentOutOfRangeException(nameof(cnt), "Read past end of the array.");
+				}
+			} else {
+				endIdx = (UInt32)(data.Length - 1);
+			}
+			if (CRC_Table is null) {
+				// Generate the CRC look-up table
+				CRC_Table = new <#= typeName #>[0x100];
+				for (Int32 dividend = 0; dividend < 0x100; dividend++) {
+					<#= typeName #> thisValue;
+					if (Reflected) {
+						thisValue = (<#= typeName #>)dividend;
+					} else {
+						thisValue = (<#= typeName #>)(dividend << <#= dataBits - 8 #>);
+					}
+					for (Int32 bitIn = 0; bitIn < 8; bitIn++) {
+						if (Reflected) {
+							if ((thisValue & 0x1) != 0) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+								thisValue = (thisValue >> 1) ^ _poly;
+<# } else { #>
+								thisValue = (<#= typeName #>)((thisValue >> 1) ^ _poly);
+<# } #>
+							} else {
+								thisValue >>= 1;
+							}
+						} else {
+							if ((thisValue & <#= $"0x{msBit:X}" #>) != 0) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+								thisValue = (thisValue << 1) ^ _poly;
+<# } else { #>
+								thisValue = (<#= typeName #>)((thisValue << 1) ^ _poly);
+<# } #>
+							} else {
+								thisValue <<= 1;
+							}
+						}
+					}
+					CRC_Table[dividend] = thisValue;
+				}
+			}
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+			<#= typeName #> crc = initCRC ^ XorOut;
+<# } else { #>
+			<#= typeName #> crc = (<#= typeName #>)(initCRC ^ XorOut);
+<# } #>
+			if (Reflected) {
+				for (UInt32 byteIdx = startIdx; byteIdx <= endIdx; byteIdx++) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+					crc = CRC_Table[data[byteIdx] ^ (crc & 0xFF)] ^ (crc >> 8);
+<# } else { #>
+					crc = (<#= typeName #>)(CRC_Table[data[byteIdx] ^ (crc & 0xFF)] ^ (crc >> 8));
+<# } #>
+				}
+			} else {
+				for (UInt32 byteIdx = startIdx; byteIdx <= endIdx; byteIdx++) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+					crc = CRC_Table[data[byteIdx] ^ ((crc & <#= $"0x{msByte:X}" #>) >> (DataBits - 8))] ^ (crc << 8);
+<# } else { #>
+					crc = (<#= typeName #>)(CRC_Table[data[byteIdx] ^ ((crc & <#= $"0x{msByte:X}" #>) >> (DataBits - 8))] ^ (crc << 8));
+<# } #>
+				}
+			}
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+			return crc ^ XorOut;
+<# } else { #>
+			return (<#= typeName #>)(crc ^ XorOut);
+<# } #>
+		}
+
+		/// <summary>Compute the CRC for memory.</summary>
+		/// <exception cref="ArgumentOutOfRangeException">
+		/// 	Thrown when one or more arguments are outside the required range.
+		/// </exception>
+		/// <param name="data">The array of bytes.</param>
+		/// <param name="initCRC">The initial CRC.</param>
+		/// <param name="offset">(Optional) The offset into the data. If negative, use 0.</param>
+		/// <param name="cnt">(Optional) Number of bytes to compute CRC for.</param>
+		/// <returns>The CRC for the memory.</returns>
+		public <#= typeName #> Compute(Memory data, <#= typeName #> initCRC, Int32 offset = -1, Int32 cnt = -1) {
+			UInt32 startIdx;
+			UInt32 endIdx;
+			if (offset >= 0) {
+				startIdx = (UInt32)offset;
+				if (startIdx >= data.Length) {
+					throw new ArgumentOutOfRangeException(nameof(offset), "Read past end of the array.");
+				}
+			} else {
+				startIdx = 0;
+			}
+			if (cnt >= 0) {
+				endIdx = (UInt32)(startIdx + cnt - 1);
+				if (endIdx >= data.Length) {
+					throw new ArgumentOutOfRangeException(nameof(cnt), "Read past end of the array.");
+				}
+			} else {
+				endIdx = (UInt32)(data.Length - 1);
+			}
+			if (CRC_Table is null) {
+				// Generate the CRC look-up table
+				CRC_Table = new <#= typeName #>[0x100];
+				for (Int32 dividend = 0; dividend < 0x100; dividend++) {
+					<#= typeName #> thisValue;
+					if (Reflected) {
+						thisValue = (<#= typeName #>)dividend;
+					} else {
+						thisValue = (<#= typeName #>)(dividend << <#= dataBits - 8 #>);
+					}
+					for (Int32 bitIn = 0; bitIn < 8; bitIn++) {
+						if (Reflected) {
+							if ((thisValue & 0x1) != 0) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+								thisValue = (thisValue >> 1) ^ _poly;
+<# } else { #>
+								thisValue = (<#= typeName #>)((thisValue >> 1) ^ _poly);
+<# } #>
+							} else {
+								thisValue >>= 1;
+							}
+						} else {
+							if ((thisValue & <#= $"0x{msBit:X}" #>) != 0) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+								thisValue = (thisValue << 1) ^ _poly;
+<# } else { #>
+								thisValue = (<#= typeName #>)((thisValue << 1) ^ _poly);
+<# } #>
+							} else {
+								thisValue <<= 1;
+							}
+						}
+					}
+					CRC_Table[dividend] = thisValue;
+				}
+			}
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+			<#= typeName #> crc = initCRC ^ XorOut;
+<# } else { #>
+			<#= typeName #> crc = (<#= typeName #>)(initCRC ^ XorOut);
+<# } #>
+			if (Reflected) {
+				for (UInt32 byteIdx = startIdx; byteIdx <= endIdx; byteIdx++) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+					crc = CRC_Table[data[byteIdx] ^ (crc & 0xFF)] ^ (crc >> 8);
+<# } else { #>
+					crc = (<#= typeName #>)(CRC_Table[data[byteIdx] ^ (crc & 0xFF)] ^ (crc >> 8));
+<# } #>
+				}
+			} else {
+				for (UInt32 byteIdx = startIdx; byteIdx <= endIdx; byteIdx++) {
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+					crc = CRC_Table[data[byteIdx] ^ ((crc & <#= $"0x{msByte:X}" #>) >> (DataBits - 8))] ^ (crc << 8);
+<# } else { #>
+					crc = (<#= typeName #>)(CRC_Table[data[byteIdx] ^ ((crc & <#= $"0x{msByte:X}" #>) >> (DataBits - 8))] ^ (crc << 8));
+<# } #>
+				}
+			}
+<# if ((typeName == "UInt32") || (typeName == "UInt64")) { #>
+			return crc ^ XorOut;
+<# } else { #>
+			return (<#= typeName #>)(crc ^ XorOut);
+<# } #>
+		}
+		/// <summary>Calculates the CRC and returns a string representation.</summary>
+		/// <param name="data">The data.</param>
+		/// <returns>The calculated CRC as a string.</returns>
+		public override String ComputeCRC(Memory data) {
+			return $"0x{Compute(data):X<#= dataBytes * 2 #>}";
+		}
+
+		/// <summary>Calculates the CRC and returns a string representation.</summary>
+		/// <param name="data">The data.</param>
+		/// <returns>The calculated CRC as a string.</returns>
+		public override String ComputeCRC(Byte[] data) {
+			return $"0x{Compute(new Memory(data)):X<#= dataBytes * 2 #>}";
+		}
+	}
+<#
+}
+#>
+}
+
+#nullable disable
