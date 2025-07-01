@@ -408,7 +408,7 @@ namespace Dataescher.Controls {
 
 			if (EditMode && EditByteAddress == dataByteAddress) {
 				Rect dataSelectRect = Layout.dataSelectRects[col, row];
-				Double selectWidth = Layout.strWidthPow2[^1] / Math.Pow(2, Layout.strWidthPow2.Length - 1);
+				Double selectWidth = Layout.strWidthPow2[Layout.strWidthPow2.Length - 1] / Math.Pow(2, Layout.strWidthPow2.Length - 1);
 
 				Rect dataEditRect = mouseDownField == HexEditorControlFields.DataCharacterField
 					? new Rect(

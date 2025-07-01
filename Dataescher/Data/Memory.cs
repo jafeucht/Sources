@@ -74,7 +74,7 @@ namespace Dataescher.Data {
 				fillArray[arrayIdx] = value;
 			}
 			for (Int64 offset = 0; offset < Length; offset += fillArraySize) {
-				IntPtr dest = new(dataPtr + offset);
+				IntPtr dest = new((Int64)dataPtr + offset);
 				Int32 copySize = (Int32)Math.Min(bytesLeft, fillArraySize);
 				Marshal.Copy(fillArray, 0, dest, copySize);
 				bytesLeft -= copySize;
@@ -91,14 +91,14 @@ namespace Dataescher.Data {
 				if (index >= Length) {
 					throw new ArgumentOutOfRangeException(nameof(index));
 				}
-				IntPtr location = new(dataPtr + index);
+				IntPtr location = new((Int64)dataPtr + index);
 				return Marshal.ReadByte(location);
 			}
 			set {
 				if (index >= Length) {
 					throw new ArgumentOutOfRangeException(nameof(index));
 				}
-				IntPtr location = new(dataPtr + index);
+				IntPtr location = new((Int64)dataPtr + index);
 				Marshal.WriteByte(location, value);
 			}
 		}
@@ -148,13 +148,13 @@ namespace Dataescher.Data {
 			if ((destOffset + size) > dest.Length) {
 				throw new ArgumentOutOfRangeException(nameof(dest), "Memory access violation");
 			}
-			IntPtr srcPtr = new(source.dataPtr + srcOffset);
-			IntPtr destPtr = new(dest.dataPtr + destOffset);
+			IntPtr srcPtr = new((Int64)source.dataPtr + srcOffset);
+			IntPtr destPtr = new((Int64)dest.dataPtr + destOffset);
 			do {
 				UInt32 bytesToCopy = (UInt32)Math.Min(0x1000000, size);
 				CopyMemory(destPtr, srcPtr, bytesToCopy);
-				srcPtr = new(srcPtr + bytesToCopy);
-				destPtr = new(destPtr + bytesToCopy);
+				srcPtr = new((Int64)srcPtr + bytesToCopy);
+				destPtr = new((Int64)destPtr + bytesToCopy);
 				size -= bytesToCopy;
 			} while (size > 0);
 		}
@@ -196,7 +196,7 @@ namespace Dataescher.Data {
 			if ((destOffset + size) > dest.Length) {
 				throw new ArgumentOutOfRangeException(nameof(dest), "Memory access violation");
 			}
-			IntPtr destPtr = new(dest.dataPtr + destOffset);
+			IntPtr destPtr = new((Int64)dest.dataPtr + destOffset);
 			Marshal.Copy(source, srcOffset, destPtr, size);
 		}
 
@@ -229,7 +229,7 @@ namespace Dataescher.Data {
 			if ((destOffset + size) > dest.Length) {
 				throw new ArgumentOutOfRangeException(nameof(dest), "Memory access violation");
 			}
-			IntPtr srcPtr = new(source.dataPtr + srcOffset);
+			IntPtr srcPtr = new((Int64)source.dataPtr + srcOffset);
 			Marshal.Copy(srcPtr, dest, destOffset, size);
 		}
 

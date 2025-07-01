@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36221.1 d17.14
+VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dataescher.Data", "..\Dataescher\Data\Dataescher.Data.csproj", "{9B27BC8B-ACD7-7487-7DA8-4E92F278392D}"
 EndProject
@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dataescher", "..\Dataescher\Controls\Dataescher.csproj", "{CB353163-292B-417B-3923-FCEAEDC45825}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dataescher", "..\Dataescher\Base\Dataescher.csproj", "{9E336BC3-9AFC-5849-3988-606764E8947F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,10 +40,10 @@ Global
 		{B46AF8B2-DBF8-4D34-8784-D35118F1E72E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B46AF8B2-DBF8-4D34-8784-D35118F1E72E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B46AF8B2-DBF8-4D34-8784-D35118F1E72E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CB353163-292B-417B-3923-FCEAEDC45825}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CB353163-292B-417B-3923-FCEAEDC45825}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CB353163-292B-417B-3923-FCEAEDC45825}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CB353163-292B-417B-3923-FCEAEDC45825}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E336BC3-9AFC-5849-3988-606764E8947F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E336BC3-9AFC-5849-3988-606764E8947F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E336BC3-9AFC-5849-3988-606764E8947F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E336BC3-9AFC-5849-3988-606764E8947F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

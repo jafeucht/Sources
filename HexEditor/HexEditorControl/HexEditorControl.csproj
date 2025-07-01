@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net6.0;net8.0;net48</TargetFrameworks>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <RootNamespace>Dataescher.Controls</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
@@ -16,7 +16,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Dataescher\Controls\Dataescher.csproj" />
+    <ProjectReference Include="..\..\Dataescher\Base\Dataescher.csproj" />
     <ProjectReference Include="..\..\Dataescher\Data\Dataescher.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
